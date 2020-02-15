@@ -24,8 +24,8 @@ class SuggestionsListView(mixins.ListModelMixin, viewsets.GenericViewSet):
         min_rate = self.request.query_params.get('min_rate', None)
         verified_skills = self.request.query_params.get('verified_skills', None)
 
-        filtered_queryset = Contact.objects.all()
-        skills_queryset = Contact.objects.all()
+        filtered_queryset = Contact.objects.none()
+        skills_queryset = Contact.objects.none()
         skills_iter = None
 
         if min_rate:
@@ -45,7 +45,8 @@ class SuggestionsListView(mixins.ListModelMixin, viewsets.GenericViewSet):
             filtered_queryset = filtered_queryset | queryset.filter(last_name__icontains=q)
             filtered_queryset = filtered_queryset | queryset.filter(contact_email__icontains=q)
             
-        queryset = (filtered_queryset | skills_queryset).distinct()
+        if verified_skills or q:
+            queryset = (filtered_queryset | skills_queryset).distinct()
 
         for contact in queryset:
             contact.calculate_score(q, skills_iter, contact.verified_skills.all())
