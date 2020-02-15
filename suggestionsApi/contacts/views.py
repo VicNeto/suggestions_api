@@ -2,6 +2,7 @@ from .serializers import ContactSerializer, SkillSerializer, SuggestionSerialize
 from rest_framework import viewsets, mixins
 from rest_framework.response import Response
 from .models import Contact, Skill
+import operator
 
 class SkillViewSet(viewsets.ModelViewSet):
     queryset = Skill.objects.all()
@@ -23,8 +24,8 @@ class SuggestionsListView(mixins.ListModelMixin, viewsets.GenericViewSet):
         min_rate = self.request.query_params.get('min_rate', None)
         verified_skills = self.request.query_params.get('verified_skills', None)
 
-        filtered_queryset = Contact.objects.none()
-        skills_queryset = Contact.objects.none()
+        filtered_queryset = Contact.objects.all()
+        skills_queryset = Contact.objects.all()
         skills_iter = None
 
         if min_rate:
@@ -49,4 +50,4 @@ class SuggestionsListView(mixins.ListModelMixin, viewsets.GenericViewSet):
         for contact in queryset:
             contact.calculate_score(q, skills_iter, contact.verified_skills.all())
 
-        return queryset
+        return sorted(queryset, key=operator.attrgetter('score'), reverse=True)
